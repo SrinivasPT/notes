@@ -18,3 +18,6 @@ Detailed information on the flow through the system. Expect these to be written 
 
 ### trace
 More detailed information. Expect these to be written to logs only.
+
+### Reference
+https://commons.apache.org/proper/commons-logging/guide.html#Message_PrioritiesLevels
