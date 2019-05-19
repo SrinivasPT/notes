@@ -1,5 +1,3 @@
-https://docs.microsoft.com/en-us/sql/linux/quickstart-install-connect-docker?view=sql-server-2017&pivots=cs1-bash
-
 ### To create an instance of the docker from image
 
 sudo docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=<YourStrong!Passw0rd>' \
@@ -16,3 +14,6 @@ sudo docker exec -it sql1 "bash"
 ### Remove container
 sudo docker stop sql1
 sudo docker rm sql1
+
+### Reference
+https://docs.microsoft.com/en-us/sql/linux/quickstart-install-connect-docker?view=sql-server-2017&pivots=cs1-bash
