@@ -1,0 +1,6 @@
+conda create -n env_zipline python=3.5
+activate env_zipline
+conda install -c Quantopian zipline
+conda install ipykernel
+python -m ipykernel install --user --name env_zipline --display-name "Python (zipline)"
+jupyter notebook
