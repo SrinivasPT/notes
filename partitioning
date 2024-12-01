@@ -1,0 +1,282 @@
+1. Implement Partitioning Scheme
+Choose Partition Key:
+
+Use SourceAsOfDate as the partition key to align with daily batch inserts and historical data access patterns.
+Define Partition Function:
+
+Opt for Monthly Partitions to maintain a manageable number (~84 partitions for 7 years).
+Example:
+sql
+Copy code
+CREATE PARTITION FUNCTION PF_SourceAsOfDate_Monthly(datetime)
+AS RANGE RIGHT FOR VALUES 
+(
+    '2024-01-01', '2024-02-01', '2024-03-01', /* ... continue monthly */
+    '2030-12-01'
+);
+Create Partition Scheme:
+
+Map Partition Function to Filegroups, distributing data across multiple filegroups for I/O optimization.
+Example:
+sql
+Copy code
+CREATE PARTITION SCHEME PS_SourceAsOfDate_Monthly
+AS PARTITION PF_SourceAsOfDate_Monthly
+TO 
+(
+    FG_Jan2024, FG_Feb2024, FG_Mar2024, /* ... continue monthly */
+    FG_Dec2030
+);
+Apply Partition Scheme to Tables:
+
+Main Table:
+sql
+Copy code
+CREATE TABLE MainTable (
+    Id INT IDENTITY PRIMARY KEY NONCLUSTERED,
+    SourceAsOfDate DATETIME NOT NULL,
+    CUID VARCHAR(50) NOT NULL,
+    -- other columns
+) ON PS_SourceAsOfDate_Monthly(SourceAsOfDate);
+Child Tables:
+sql
+Copy code
+CREATE TABLE ChildTable (
+    Id INT IDENTITY PRIMARY KEY NONCLUSTERED,
+    CUID VARCHAR(50),
+    SourceAsOfDate DATETIME NOT NULL,
+    -- additional attribute columns
+) ON PS_SourceAsOfDate_Monthly(SourceAsOfDate);
+
+==================================================================
+2. Adjust Primary Key and Indexes
+Modify Primary Key to Include Partition Key:
+
+Option 1: Composite Primary Key
+sql
+Copy code
+ALTER TABLE MainTable
+DROP CONSTRAINT PK_MainTable_Id;
+
+ALTER TABLE MainTable
+ADD CONSTRAINT PK_MainTable_Id_SourceAsOfDate PRIMARY KEY CLUSTERED (SourceAsOfDate, Id);
+Option 2: Separate Clustered Index (Preferred to minimize foreign key disruptions)
+sql
+Copy code
+ALTER TABLE MainTable
+DROP CONSTRAINT PK_MainTable_Id;
+
+ALTER TABLE MainTable
+ADD CONSTRAINT PK_MainTable_Id PRIMARY KEY NONCLUSTERED (Id);
+
+CREATE CLUSTERED INDEX IX_MainTable_SourceAsOfDate_Id
+ON MainTable (SourceAsOfDate, Id)
+ON PS_SourceAsOfDate_Monthly(SourceAsOfDate);
+Create Non-Clustered Global Index on CUID:
+
+Facilitates Fast UI Queries Filtering by CUID.
+sql
+Copy code
+CREATE NONCLUSTERED INDEX IX_MainTable_CUID
+ON MainTable (CUID)
+INCLUDE (SourceAsOfDate, /* other necessary columns */);
+Consider Composite Indexes for Combined Filtering:
+
+Optimize Queries Filtering by Both CUID and SourceAsOfDate.
+sql
+Copy code
+CREATE NONCLUSTERED INDEX IX_MainTable_CUID_SourceAsOfDate
+ON MainTable (CUID, SourceAsOfDate)
+INCLUDE (/* other necessary columns */);
+
+==================================================================
+3. Optimize UI Queries with Date Range Filtering
+Implement Date Range in UI Queries:
+
+Limit to Last 1 Year to Enable Partition Elimination.
+sql
+Copy code
+SELECT /* columns */
+FROM MainTable
+WHERE CUID = @CUID
+  AND SourceAsOfDate >= DATEADD(year, -1, GETDATE())
+  AND SourceAsOfDate <= GETDATE()
+ORDER BY SourceAsOfDate DESC;
+Ensure Queries are SARGable:
+
+Avoid Functions on Indexed Columns.
+Good: WHERE CUID = @CUID
+Bad: WHERE UPPER(CUID) = @CUID
+Educate Users on Performance Trade-offs:
+
+Communicate that accessing data beyond 1 year may result in slower responses.
+
+==================================================================
+4. Maintain and Optimize Indexes
+Regular Index Maintenance:
+
+Rebuild or Reorganize Indexes to Reduce Fragmentation.
+sql
+Copy code
+ALTER INDEX ALL ON MainTable REBUILD;
+-- or
+ALTER INDEX ALL ON MainTable REORGANIZE;
+Update Statistics:
+
+Ensure Query Optimizer Has Current Data Distribution Info.
+sql
+Copy code
+UPDATE STATISTICS MainTable WITH FULLSCAN;
+Monitor Index Usage:
+
+Identify and Remove Unused or Underutilized Indexes.
+sql
+Copy code
+-- Example: Find missing indexes
+SELECT 
+    migs.avg_total_user_cost * migs.avg_user_impact * (migs.user_seeks + migs.user_scans) AS improvement_measure,
+    mid.statement,
+    mid.equality_columns,
+    mid.inequality_columns,
+    mid.included_columns
+FROM sys.dm_db_missing_index_group_stats migs
+INNER JOIN sys.dm_db_missing_index_groups mig ON migs.group_handle = mig.group_handle
+INNER JOIN sys.dm_db_missing_index_details mid ON mig.index_handle = mid.index_handle
+ORDER BY improvement_measure DESC;
+
+==================================================================
+5. Implement Partition Management Practices
+Automate Partition Switching:
+
+Add New Partitions Monthly and Archive/Purge Old Partitions as Needed.
+sql
+Copy code
+-- Add a new partition boundary
+ALTER PARTITION FUNCTION PF_SourceAsOfDate_Monthly()
+SPLIT RANGE ('2025-01-01');
+
+-- Merge an old partition for archiving
+ALTER PARTITION FUNCTION PF_SourceAsOfDate_Monthly()
+MERGE RANGE ('2017-01-01');
+Use Sliding Window Partitioning (Optional):
+
+Keep Recent Data in Active Partitions and Older Data Archived Separately.
+
+==================================================================
+6. Enhance Query Performance for CUID-Based Searches
+Create Covering Indexes:
+
+Include All Necessary Columns in the CUID Index to Avoid Key Lookups.
+sql
+Copy code
+CREATE NONCLUSTERED INDEX IX_MainTable_CUID_SourceAsOfDate
+ON MainTable (CUID, SourceAsOfDate)
+INCLUDE (Column1, Column2, Column3);
+Consider Filtered Indexes (If Applicable):
+
+Optimize for Common Subsets or Frequent Queries.
+sql
+Copy code
+CREATE NONCLUSTERED INDEX IX_MainTable_CUID_Recent
+ON MainTable (CUID)
+WHERE SourceAsOfDate >= DATEADD(year, -1, GETDATE());
+
+==================================================================
+7. Leverage Advanced SQL Server Features (Optional)
+Implement Columnstore Indexes for Analytical Queries:
+
+Improve Performance for Large-Scale Read Operations.
+sql
+Copy code
+CREATE COLUMNSTORE INDEX IX_MainTable_Columnstore
+ON MainTable (CUID, SourceAsOfDate, /* other columns */);
+Utilize In-Memory OLTP (If Suitable):
+
+Enhance Transaction Performance for High-Concurrency Workloads.
+sql
+Copy code
+CREATE TABLE MainTable_MemoryOptimized (
+    Id INT IDENTITY PRIMARY KEY NONCLUSTERED,
+    SourceAsOfDate DATETIME NOT NULL,
+    CUID VARCHAR(50),
+    -- other columns
+)
+WITH (MEMORY_OPTIMIZED = ON, DURABILITY = SCHEMA_AND_DATA);
+
+==================================================================
+8. Monitor and Continuously Optimize Performance
+Enable and Utilize Query Store:
+
+Track Query Performance and Identify Bottlenecks.
+sql
+Copy code
+ALTER DATABASE YourDatabase
+SET QUERY_STORE = ON;
+Use Dynamic Management Views (DMVs) for Insights:
+
+Monitor Index Usage, Query Performance, and System Health.
+sql
+Copy code
+-- Example: Monitor index usage
+SELECT 
+    OBJECT_NAME(i.object_id) AS TableName,
+    i.name AS IndexName,
+    i.index_id,
+    s.user_seeks,
+    s.user_scans,
+    s.user_lookups,
+    s.user_updates
+FROM sys.indexes i
+JOIN sys.dm_db_index_usage_stats s
+    ON i.object_id = s.object_id AND i.index_id = s.index_id
+WHERE OBJECTPROPERTY(i.object_id, 'IsUserTable') = 1
+ORDER BY s.user_seeks DESC;
+Regularly Review and Adjust Partitioning and Indexing Strategies:
+
+Adapt to Changing Data Volumes and Query Patterns.
+
+==================================================================
+9. Test and Validate Changes Before Production Deployment
+Set Up a Staging Environment:
+
+Replicate Production Data and Workloads to Test Partitioning and Indexing Strategies.
+Verify Partition Elimination:
+
+Use Execution Plans to Ensure Queries Access Only Relevant Partitions.
+sql
+Copy code
+SET SHOWPLAN_XML ON;
+GO
+-- Run a sample UI query
+SELECT /* columns */
+FROM MainTable
+WHERE CUID = 'C12345'
+  AND SourceAsOfDate >= '2023-12-01'
+  AND SourceAsOfDate <= '2024-12-01';
+GO
+SET SHOWPLAN_XML OFF;
+Benchmark Query Performance:
+
+Measure Response Times for Both Batch and UI Queries to Ensure Improvements.
+Ensure Data Integrity and Application Compatibility:
+
+Validate that Changes Do Not Break Existing Functionality or Data Relationships.
+
+==================================================================
+10. Educate and Communicate with Stakeholders
+Inform Users About the 1-Year Data Access Policy:
+
+Explain Performance Benefits and Trade-offs When Accessing Older Data.
+Provide Guidelines for Optimal Query Usage:
+
+Encourage Inclusion of Date Filters in Queries to Leverage Partition Elimination.
+
+==================================================================
+11. Plan for Future Scalability
+Anticipate Data Growth Beyond 7 Years:
+
+Design Partitioning Scheme to Easily Add New Partitions and Archive Old Data.
+Regularly Assess System Performance:
+
+Adapt Strategies Based on Evolving Data Patterns and Business Requirements.
+By following these action items, you will effectively optimize your MS SQL database for high-volume batch inserts and responsive UI queries, ensuring scalability and maintaining performance as your data continues to grow.
