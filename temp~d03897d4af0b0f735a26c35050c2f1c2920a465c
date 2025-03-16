@@ -1,0 +1,224 @@
+==================START OFFICE SCRIPT MACRO TO FR===============================
+async function main(workbook: ExcelScript.Workbook) {
+    // Define the Federal Register API URL
+    const baseUrl = "https://www.federalregister.gov/api/v1/documents.json";
+    
+    // Bank-related agency IDs
+    const BANK_AGENCIES = [185, 193, 466, 378, 121];  // FDIC, Fed, SEC, OCC, CFPB
+
+    // Get yesterday’s date in YYYY-MM-DD format
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const dateStr = yesterday.toISOString().split("T")[0];
+
+    // Prepare query parameters
+    const params = new URLSearchParams({
+        "conditions[publication_date][is]": dateStr,
+        "conditions[term]": "banks banking bank deposit insurance brokers",
+        "per_page": "1000"
+    });
+
+    // Append agency IDs
+    BANK_AGENCIES.forEach(id => params.append("conditions[agency_ids][]", id.toString()));
+
+    // Fetch data from the API
+    const response = await fetch(`${baseUrl}?${params.toString()}`);
+    
+    if (!response.ok) {
+        console.log(`Error: ${response.status} - ${await response.text()}`);
+        return;
+    }
+
+    const data = await response.json();
+    const documents = data.results;
+
+    if (documents.length === 0) {
+        console.log("No documents found for the given date.");
+        return;
+    }
+
+    // Get active worksheet
+    const sheet = workbook.getActiveWorksheet();
+
+    // Define headers
+    const headers = [
+        "Source", "Issuing Authority", "Type Of Change", "Event Type", "Unique Vendor Cluster ID",
+        "Vendor Impacted", "Citation ID", "Bill Type", "Reg Type", "Identifier", "Year",
+        "Regulation Status", "Bill Status", "Title", "Summary", "Link to Reg Change Text",
+        "Introduced On", "Published On", "First Effective Date", "Comments", "Enacted Date", "Change Alert Topic"
+    ];
+    
+    // Set headers in the first row
+    sheet.getRange("A1").getResizedRange(0, headers.length - 1).setValues([headers]);
+
+    // Map API response to spreadsheet
+    const rows: (string | number)[][] = documents.map(doc => [
+        "Federal Register",
+        doc.agencies?.[0]?.name || "N/A",
+        { "Rule": "New/Amendment", "Proposed Rule": "Proposed", "Notice": "Announcement" }[doc.type] || "Unknown",
+        doc.action || "N/A",
+        `VC-${doc.document_number || "unknown"}`,  // Custom ID
+        "TBD",  // Vendor Impacted (manual entry)
+        doc.citation || "N/A",
+        "N/A",  // Bill Type
+        doc.type || "N/A",
+        doc.document_number || "N/A",
+        doc.publication_date?.slice(0, 4) || "N/A",  // Year
+        { "Rule": "Final", "Proposed Rule": "Proposed", "Notice": "Published" }[doc.type] || "N/A",
+        "N/A",  // Bill Status
+        doc.title || "N/A",
+        doc.abstract || "N/A",
+        doc.html_url || "N/A",
+        doc.publication_date || "N/A",  // Introduced On
+        doc.publication_date || "N/A",  // Published On
+        doc.effective_on || "N/A",  // First Effective Date
+        doc.comments_close_on || "N/A",
+        doc.effective_on || doc.publication_date || "N/A",  // Enacted Date
+        doc.title?.toLowerCase().includes("banks") ? "Banks, banking" :
+        doc.title?.toLowerCase().includes("brokers") ? "Brokers" :
+        "Bank deposit insurance"
+    ]);
+
+    // Insert rows into the sheet starting from row 2
+    sheet.getRange(`A2`).getResizedRange(rows.length - 1, headers.length - 1).setValues(rows);
+
+    console.log(`Successfully imported ${documents.length} records.`);
+}
+
+==================END OFFICE SCRIPT MACRO TO FR===============================
+==================START GOVINFO API XML =============
+async function main(workbook: ExcelScript.Workbook) {
+    // Define govinfo base URL for Federal Register bulk data
+    const baseUrl = "https://www.govinfo.gov/content/pkg/FR-{date}/xml/FR-{date}.xml";
+
+    // Bank-related agency names (case-insensitive)
+    const BANK_AGENCIES = ["FDIC", "FEDERAL RESERVE", "SEC", "OCC", "CFPB"];
+
+    // Get yesterday’s date in YYYY-MM-DD format
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const dateStr = yesterday.toISOString().split("T")[0];
+
+    // Construct the govinfo URL for the specific date
+    const govinfoUrl = baseUrl.replace(/{date}/g, dateStr);
+
+    try {
+        // Fetch the XML file
+        const response = await fetch(govinfoUrl);
+        if (!response.ok) {
+            console.log(`Error fetching XML: ${response.status} - ${await response.text()}`);
+            return;
+        }
+
+        // Parse the XML file
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, "application/xml");
+
+        // Extract all <RULE> nodes
+        const rules = Array.from(xmlDoc.querySelectorAll("RULE"));
+        const documents = rules.map(rule => {
+            // Extract basic information
+            const agency = rule.querySelector("PREAMB > AGENCY")?.textContent.trim() || "N/A";
+            const cfr = rule.querySelector("PREAMB > CFR")?.textContent.trim() || "N/A";
+            const subject = rule.querySelector("PREAMB > SUBJECT")?.textContent.trim() || "N/A";
+            const action = rule.querySelector("PREAMB > ACT > P")?.textContent.trim() || "N/A";
+            const summary = rule.querySelector("PREAMB > SUM > P")?.textContent.trim() || "N/A";
+            const dates = rule.querySelector("PREAMB > DATES > P")?.textContent.trim() || "N/A";
+            const frdoc = rule.querySelector("FRDOC")?.textContent.trim() || "N/A";
+
+            // Parse effective date and comments close date from <DATES>
+            let effectiveDate = "N/A";
+            let commentsCloseDate = "N/A";
+            if (dates.includes("effective date")) {
+                effectiveDate = extractDate(dates, /effective date.*?(?:is|until)\s+(\d{4}-\d{2}-\d{2})/i);
+            }
+            if (dates.includes("comments")) {
+                commentsCloseDate = extractDate(dates, /comments.*?(?:on or before|by)\s+(\d{4}-\d{2}-\d{2})/i);
+            }
+
+            // Return the parsed document
+            return {
+                agency,
+                cfr,
+                subject,
+                action,
+                summary,
+                effectiveDate,
+                commentsCloseDate,
+                frdoc
+            };
+        });
+
+        // Filter documents related to banking agencies
+        const filteredDocuments = documents.filter(doc =>
+            BANK_AGENCIES.some(bankAgency =>
+                doc.agency.toUpperCase().includes(bankAgency)
+            )
+        );
+
+        if (filteredDocuments.length === 0) {
+            console.log("No relevant documents found for the given date.");
+            return;
+        }
+
+        // Get active worksheet
+        const sheet = workbook.getActiveWorksheet();
+
+        // Define headers
+        const headers = [
+            "Source", "Issuing Authority", "Type Of Change", "Event Type", "Unique Vendor Cluster ID",
+            "Vendor Impacted", "Citation ID", "Bill Type", "Reg Type", "Identifier", "Year",
+            "Regulation Status", "Bill Status", "Title", "Summary", "Link to Reg Change Text",
+            "Introduced On", "Published On", "First Effective Date", "Comments", "Enacted Date", "Change Alert Topic"
+        ];
+
+        // Set headers in the first row
+        sheet.getRange("A1").getResizedRange(0, headers.length - 1).setValues([headers]);
+
+        // Map XML data to spreadsheet rows
+        const rows = filteredDocuments.map(doc => [
+            "Federal Register",
+            doc.agency || "N/A",
+            doc.action.toLowerCase().includes("rule") ? "New/Amendment" : "Announcement",
+            doc.action || "N/A",
+            `VC-${doc.frdoc.split(" ")[2] || "unknown"}`,  // Custom ID
+            "TBD",  // Vendor Impacted (manual entry)
+            doc.frdoc || "N/A",  // Citation ID
+            "N/A",  // Bill Type
+            doc.action.toLowerCase().includes("rule") ? "Rule" : "Notice",
+            doc.frdoc.split(" ")[2] || "N/A",  // Identifier
+            dateStr.slice(0, 4),  // Year
+            doc.action.toLowerCase().includes("final") ? "Final" : "Proposed",
+            "N/A",  // Bill Status
+            doc.subject || "N/A",
+            doc.summary || "N/A",
+            `https://www.govinfo.gov/content/pkg/FR-${dateStr}/html/${doc.frdoc.split(" ")[2]}.htm`,  // Link to Reg Change Text
+            dateStr || "N/A",  // Introduced On
+            dateStr || "N/A",  // Published On
+            doc.effectiveDate || "N/A",  // First Effective Date
+            doc.commentsCloseDate || "N/A",
+            doc.effectiveDate || dateStr || "N/A",  // Enacted Date
+            doc.subject.toLowerCase().includes("banks") ? "Banks, banking" :
+            doc.subject.toLowerCase().includes("brokers") ? "Brokers" :
+            "Bank deposit insurance"
+        ]);
+
+        // Insert rows into the sheet starting from row 2
+        sheet.getRange(`A2`).getResizedRange(rows.length - 1, headers.length - 1).setValues(rows);
+
+        console.log(`Successfully imported ${filteredDocuments.length} records.`);
+    } catch (error) {
+        console.error("An error occurred:", error);
+    }
+}
+
+/**
+ * Helper function to extract a date from a string using a regex pattern.
+ */
+function extractDate(text: string, pattern: RegExp): string {
+    const match = text.match(pattern);
+    return match ? match[1] : "N/A";
+}
+
+================================================ END
