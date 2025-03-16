@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>PDF Text Extractor</title>
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        #inputSection, #displaySection {
+            width: 50%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #inputSection {
+            background-color: #f0f0f0;
+        }
+        #displaySection {
+            background-color: #ffffff;
+            border-left: 1px solid #ccc;
+        }
+        #pdfFileInput {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        #displayContent {
+            font-size: 16px;
+            font-family: 'Arial', 'Noto Sans', sans-serif;
+            white-space: pre-wrap;
+        }
+        #displayContent p {
+            margin: 0 0 1em 0; /* Adds spacing between paragraphs */
+        }
+        button {
+            margin: 10px 0;
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="inputSection">
+        <h2>Upload PDF</h2>
+        <input type="file" id="pdfFileInput" accept=".pdf">
+        <button id="processButton">Process PDF</button>
+    </div>
+    <div id="displaySection">
+        <h2>Formatted Content</h2>
+        <div id="displayContent"></div>
+    </div>
+
+    <!-- Include PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js" integrity="sha512-ml/QKfG3+Yes6TwOzQb7aCNtJF4PUyha6R3w8pSTo/VJSywl7ZreYvvtUso7fKevpsI+pYVVwnu82YO0q3V6eg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+        const pdfFileInput = document.getElementById('pdfFileInput');
+        const processButton = document.getElementById('processButton');
+        const displayContent = document.getElementById('displayContent');
+
+        // Process the PDF file
+        processButton.addEventListener('click', async () => {
+            const file = pdfFileInput.files[0];
+            if (!file) {
+                alert('Please select a PDF file.');
+                return;
+            }
+
+            try {
+                const fileReader = new FileReader();
+                fileReader.onload = async () => {
+                    const arrayBuffer = fileReader.result;
+
+                    // Load the PDF
+                    const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+
+                    // Extract and format text
+                    let fullText = '';
+                    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+						debugger;
+                        const page = await pdf.getPage(pageNum);
+                        const textContent = await page.getTextContent();
+
+                        // Group text items into paragraphs
+                        const paragraphs = groupTextIntoParagraphs(textContent.items);
+
+                        // Format paragraphs
+                        const pageText = paragraphs.map(paragraph => `<p>${paragraph}</p>`).join('');
+                        fullText += pageText;
+                    }
+
+                    // Display the formatted text
+                    displayContent.innerHTML = fullText;
+                };
+
+                fileReader.readAsArrayBuffer(file);
+            } catch (error) {
+                console.error('Error processing the PDF:', error);
+                alert('Failed to process the PDF. Please check the file and try again.');
+            }
+        });
+
+        // Group text items into paragraphs
+        function groupTextIntoParagraphs(textItems) {
+			debugger;
+            const paragraphs = [];
+            let currentParagraph = '';
+            let prevY = null;
+
+            for (const item of textItems) {
+                const y = item.transform[5]; // y-coordinate of the text item
+
+                // If the y-coordinate changes significantly, start a new paragraph
+                if (prevY !== null && Math.abs(y - prevY) > 10) {
+                    paragraphs.push(currentParagraph.trim());
+                    currentParagraph = '';
+                }
+
+                // Add the text to the current paragraph
+                currentParagraph += item.str + ' ';
+                prevY = y;
+            }
+
+            // Add the last paragraph
+            if (currentParagraph.trim()) {
+                paragraphs.push(currentParagraph.trim());
+            }
+
+            return paragraphs;
+        }
+    </script>
+</body>
+</html>

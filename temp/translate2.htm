@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>PDF Text Extractor</title>
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        #inputSection, #displaySection {
+            width: 50%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #inputSection {
+            background-color: #f0f0f0;
+        }
+        #displaySection {
+            background-color: #ffffff;
+            border-left: 1px solid #ccc;
+        }
+        #pdfFileInput {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        #displayContent {
+            font-size: 16px;
+            font-family: 'Arial', 'Noto Sans', sans-serif;
+            white-space: pre-wrap;
+        }
+        #displayContent p {
+            margin: 0 0 1em 0; /* Adds spacing between paragraphs */
+        }
+        button {
+            margin: 10px 0;
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="inputSection">
+        <h2>Upload PDF</h2>
+        <input type="file" id="pdfFileInput" accept=".pdf">
+        <button id="cleanupButton">Cleanup PDF Content</button>
+    </div>
+    <div id="displaySection">
+        <h2>Extracted Content</h2>
+        <div id="displayContent"></div>
+    </div>
+
+    <!-- Include PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js" integrity="sha512-ml/QKfG3+Yes6TwOzQb7aCNtJF4PUyha6R3w8pSTo/VJSywl7ZreYvvtUso7fKevpsI+pYVVwnu82YO0q3V6eg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+        const pdfFileInput = document.getElementById('pdfFileInput');
+        const output = document.getElementById('displayContent');
+        const cleanupButton = document.getElementById('cleanupButton');
+
+        // Load and extract text from the PDF
+        pdfFileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const fileReader = new FileReader();
+            fileReader.onload = async () => {
+                const arrayBuffer = fileReader.result;
+
+                // Load the PDF
+                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+
+                // Extract text from each page
+                let fullText = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + '\n\n';
+                }
+
+                // Display the extracted text
+                output.innerText = fullText;
+            };
+
+            fileReader.readAsArrayBuffer(file);
+        });
+
+        // Cleanup PDF content
+        cleanupButton.addEventListener('click', () => {
+            let content = output.innerText;
+
+            // Normalize line breaks
+            content = content
+                .replace(/\r\n/g, '\n') // Normalize Windows line breaks to Unix
+                .replace(/\n{3,}/g, '\n\n'); // Replace 3+ newlines with double newlines
+
+            // Update the displayed content
+            output.innerText = content;
+        });
+    </script>
+</body>
+</html>

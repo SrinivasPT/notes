@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Content Input and Display</title>
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        #inputSection, #displaySection {
+            width: 50%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #inputSection {
+            background-color: #f0f0f0;
+        }
+        #displaySection {
+            background-color: #ffffff;
+            border-left: 1px solid #ccc;
+        }
+        #contentInput {
+            width: 100%;
+            height: 80%;
+            resize: vertical;
+            padding: 10px;
+            font-size: 16px;
+            font-family: 'Arial', 'Noto Sans', sans-serif;
+        }
+        #displayContent {
+            font-size: 16px;
+            font-family: 'Arial', 'Noto Sans', sans-serif;
+            white-space: pre-wrap;
+        }
+        #displayContent p {
+            margin: 0 0 1em 0; /* Adds spacing between paragraphs */
+        }
+    </style>
+</head>
+<body>
+    <div id="inputSection">
+        <h2>Enter Content</h2>
+        <textarea id="contentInput" placeholder="Paste or type your content here..."></textarea>
+    </div>
+    <div id="displaySection">
+        <h2>Displayed Content</h2>
+        <div id="displayContent"></div>
+    </div>
+
+    <script>
+        const input = document.getElementById('contentInput');
+        const output = document.getElementById('displayContent');
+
+		input.addEventListener('input', function() {
+			const formattedContent = input.value
+				.replace(/\n\n+/g, '<br><br>') // Double newlines become two <br> tags
+				.replace(/\n/g, '<br>');      // Single newlines become one <br>
+			output.innerHTML = formattedContent;
+		});
+    </script>
+</body>
+</html>

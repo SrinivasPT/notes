@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Content Input and Display</title>
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        #inputSection, #displaySection {
+            width: 50%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        #inputSection {
+            background-color: #f0f0f0;
+        }
+        #displaySection {
+            background-color: #ffffff;
+            border-left: 1px solid #ccc;
+        }
+        #contentInput {
+            width: 100%;
+            height: 80%;
+            resize: vertical;
+            padding: 10px;
+            font-size: 16px;
+            font-family: 'Arial', 'Noto Sans', sans-serif;
+        }
+        #displayContent {
+            font-size: 16px;
+            font-family: 'Arial', 'Noto Sans', sans-serif;
+            white-space: pre-wrap;
+        }
+        #displayContent p {
+            margin: 0 0 1em 0; /* Adds spacing between paragraphs */
+        }
+        button {
+            margin: 10px 0;
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="inputSection">
+        <h2>Enter Content</h2>
+        <textarea id="contentInput" translate="no" placeholder="Paste or type your content here..."></textarea>
+        <button id="cleanupButton">Cleanup PDF Content</button>
+    </div>
+    <div id="displaySection">
+        <h2>Displayed Content</h2>
+        <div id="displayContent"></div>
+    </div>
+
+    <script>
+        const input = document.getElementById('contentInput');
+        const output = document.getElementById('displayContent');
+        const cleanupButton = document.getElementById('cleanupButton');
+
+        // Cleanup PDF content
+        cleanupButton.addEventListener('click', () => {
+            let content = input.value;
+
+            // Step 1: Normalize line breaks
+            content = content
+                .replace(/\r\n/g, '\n') // Normalize Windows line breaks to Unix
+                .replace(/\n{3,}/g, '\n\n'); // Replace 3+ newlines with double newlines
+
+            // Step 2: Split into lines
+            const lines = content.split('\n');
+
+            // Step 3: Group lines into paragraphs based on the short line rule
+            const paragraphs = [];
+            let currentParagraph = '';
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+
+                // Short Line Rule: If the line is significantly shorter than the previous line, start a new paragraph
+                const isShortLine = i > 0 && line.length < 0.65 * lines[i - 1].length;
+
+                // If the short line rule matches, start a new paragraph
+                if (isShortLine) {
+                    if (currentParagraph) {
+                        paragraphs.push(currentParagraph.trim());
+                        currentParagraph = '';
+                    }
+                }
+
+                // Add the current line to the current paragraph
+                currentParagraph += line + ' ';
+            }
+
+            // Add the last paragraph
+            if (currentParagraph.trim()) {
+                paragraphs.push(currentParagraph.trim());
+            }
+
+            // Step 4: Join paragraphs with double newlines
+            const cleanedContent = paragraphs.join('\n\n');
+
+            // Update the input value
+            input.value = cleanedContent;
+            input.dispatchEvent(new Event('input')); // Trigger input event to update output
+        });
+
+        // Handle input and format content
+        input.addEventListener('input', function() {
+            const content = input.value;
+
+            // Split content into paragraphs based on double newlines
+            const paragraphs = content.split(/\n\n+/);
+
+            // Replace single newlines within paragraphs with <br> tags
+            const formattedContent = paragraphs
+                .map(paragraph => `<p>${paragraph.replace(/\n/g, '<br>')}</p>`)
+                .join('');
+
+            output.innerHTML = formattedContent;
+        });
+    </script>
+</body>
+</html>
