@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>PDF Text Extractor</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        /* Top controls section */
+        #controlsSection {
+            background-color: #f0f0f0;
+            padding: 15px 20px;
+            border-bottom: 1px solid #ccc;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .controls-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            margin: 0 auto;
+        }
+        .title-section {
+            min-width: 180px;
+        }
+        .middle-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-grow: 1;
+            justify-content: center;
+        }
+        .page-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: flex-end;
+            min-width: 250px;
+        }
+        .control-item {
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+        #pdfFileInput {
+            padding: 5px;
+            font-size: 14px;
+            width: 300px;
+        }
+        #pageSelector {
+            padding: 5px;
+            font-size: 14px;
+            min-width: 120px;
+        }
+        label {
+            margin-right: 5px;
+            font-weight: bold;
+        }
+        button {
+            padding: 5px 15px;
+            font-size: 14px;
+            height: 30px;
+        }
+        #pageInfo {
+            color: #666;
+            min-width: 100px;
+        }
+        
+        /* Toggle switch for mode selection */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider {
+            background-color: #2196F3;
+        }
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        .toggle-label {
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        /* Content sections */
+        #contentSection {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        #leftSection, #rightSection {
+            width: 50%;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        #leftSection {
+            background-color: #f9f9f9;
+        }
+        #rightSection {
+            background-color: #ffffff;
+            border-left: 1px solid #ccc;
+        }
+        .content-header {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        #originalContent, #displayContent {
+            font-size: 16px;
+            font-family: 'Arial', 'Noto Sans', sans-serif;
+            white-space: pre-wrap;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 15px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            border-radius: 4px;
+        }
+        #originalContent p, #displayContent p {
+            margin: 0 0 1em 0; /* Adds spacing between paragraphs */
+        }
+        .translation-notice {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+        .no-translate-indicator {
+            background-color: #f8f8f8;
+            border-left: 3px solid #d9534f;
+            padding-left: 5px;
+        }
+        .translate-indicator {
+            background-color: #f8f8f8;
+            border-left: 3px solid #5cb85c;
+            padding-left: 5px;
+        }
+        
+        /* Editable content styles */
+        .editable-area {
+            min-height: 200px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 4px;
+            overflow-y: auto;
+            flex-grow: 1;
+            font-size: 16px;
+            font-family: 'Arial', 'Noto Sans', sans-serif;
+            white-space: pre-wrap;
+            outline: none;
+        }
+        
+        /* Mode-specific visibility */
+        .pdf-mode-only {
+            display: flex;
+            align-items: center;
+        }
+        .text-mode-only {
+            display: none;
+        }
+        body.text-mode .pdf-mode-only {
+            display: none;
+        }
+        body.text-mode .text-mode-only {
+            display: flex;
+            align-items: center;
+        }
+        body.text-mode #processTextButton {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Top controls section -->
+    <div id="controlsSection">
+        <div class="controls-container">
+            <!-- Left: Title -->
+            <div class="title-section">
+                <h2 style="margin: 0; white-space: nowrap;">Translator</h2>
+            </div>
+            
+            <!-- Middle: Mode toggle, File selection and process button -->
+            <div class="middle-controls">
+                <div class="control-item">
+                    <label for="modeToggle">Mode:</label>
+                    <div class="toggle-container">
+                        <span class="toggle-label">PDF</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="modeToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">Text</span>
+                    </div>
+                </div>
+                <div class="control-item pdf-mode-only">
+                    <label for="pdfFileInput">Select PDF:</label>
+                    <input type="file" id="pdfFileInput" accept=".pdf">
+                </div>
+                <div class="control-item pdf-mode-only">
+                    <button id="processButton">Process PDF</button>
+                </div>
+                <div class="control-item text-mode-only">
+                    <button id="processTextButton">Process Text</button>
+                </div>
+            </div>
+            
+            <!-- Right: Page controls -->
+            <div class="page-controls">
+                <div class="control-item pdf-mode-only">
+                    <label for="pageSelector">Page:</label>
+                    <select id="pageSelector" disabled>
+                        <option value="all">All Pages</option>
+                    </select>
+                </div>
+                <div id="pageInfo" class="pdf-mode-only"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Content section -->
+    <div id="contentSection">
+        <!-- Left section with original text -->
+        <div id="leftSection">
+            <h3 class="content-header">Original Content</h3>
+            <div class="translation-notice no-translate-indicator">This content will NOT be translated by the browser translator</div>
+            <div id="originalContent" translate="no"></div>
+            <div id="editableContent" class="editable-area text-mode-only" contenteditable="true" translate="no" style="display: none;">Paste your text here...</div>
+        </div>
+        
+        <!-- Right section with translatable text -->
+        <div id="rightSection">
+            <h3 class="content-header">Translated Content</h3>
+            <div class="translation-notice translate-indicator">To translate, use browser Right Click -> Translate to English</div>
+            <div id="displayContent"></div>
+        </div>
+    </div>
+
+    <!-- Include PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js" integrity="sha512-ml/QKfG3+Yes6TwOzQb7aCNtJF4PUyha6R3w8pSTo/VJSywl7ZreYvvtUso7fKevpsI+pYVVwnu82YO0q3V6eg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script>
+        const pdfFileInput = document.getElementById('pdfFileInput');
+        const processButton = document.getElementById('processButton');
+        const originalContent = document.getElementById('originalContent');
+        const displayContent = document.getElementById('displayContent');
+        const pageSelector = document.getElementById('pageSelector');
+        const pageInfo = document.getElementById('pageInfo');
+        const modeToggle = document.getElementById('modeToggle');
+        const editableContent = document.getElementById('editableContent');
+        const processTextButton = document.getElementById('processTextButton');
+
+        let extractedPages = []; // Will hold all extracted pages
+        let currentPdf = null;   // Reference to the current PDF
+        let isTextMode = false;  // Track current mode
+        let textProcessTimeout = null; // For throttling text processing
+
+        // Initialize page selector
+        pageSelector.addEventListener('change', updateDisplayedContent);
+        
+        // Mode toggle handler
+        modeToggle.addEventListener('change', () => {
+            isTextMode = modeToggle.checked;
+            document.body.classList.toggle('text-mode', isTextMode);
+            
+            // Toggle display of content areas
+            originalContent.style.display = isTextMode ? 'none' : 'block';
+            editableContent.style.display = isTextMode ? 'block' : 'none';
+            
+            // Reset content areas
+            if (isTextMode) {
+                displayContent.innerHTML = '';
+                editableContent.focus();
+            } else {
+                // Reset only if switching back to PDF mode
+                if (extractedPages.length === 0) {
+                    originalContent.innerHTML = '';
+                    displayContent.innerHTML = '';
+                }
+            }
+        });
+        
+        // Add paste event listener to automatically process text
+        editableContent.addEventListener('paste', () => {
+            // Use setTimeout to ensure content is pasted before processing
+            setTimeout(() => processEditableText(), 100);
+        });
+        
+        // Add input event listener to process text as user types/edits
+        editableContent.addEventListener('input', () => {
+            // Throttle processing to avoid excessive updates
+            if (textProcessTimeout) clearTimeout(textProcessTimeout);
+            textProcessTimeout = setTimeout(() => processEditableText(), 500);
+        });
+        
+        // Function to process text from editable content
+        function processEditableText() {
+            const text = editableContent.innerText.trim();
+            if (!text) {
+                displayContent.innerHTML = '';
+                return;
+            }
+            
+            // Split text into paragraphs
+            const paragraphs = text.split(/\n+/).filter(p => p.trim());
+            const formattedText = paragraphs.map(p => `<p>${p}</p>`).join('');
+            
+            // Display the processed text
+            displayContent.innerHTML = formattedText;
+        }
+        
+        // Process text button handler - keep this for backup, though button will be hidden
+        processTextButton.addEventListener('click', () => {
+            processEditableText();
+        });
+
+        // Process the PDF file
+        processButton.addEventListener('click', async () => {
+            const file = pdfFileInput.files[0];
+            if (!file) {
+                alert('Please select a PDF file.');
+                return;
+            }
+
+            try {
+                // Reset UI state
+                extractedPages = [];
+                resetPageSelector();
+                originalContent.innerHTML = 'Loading PDF...';
+                displayContent.innerHTML = 'Loading PDF...';
+
+                const fileReader = new FileReader();
+                fileReader.onload = async () => {
+                    const arrayBuffer = fileReader.result;
+
+                    // Load the PDF
+                    currentPdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                    
+                    // Update page selector
+                    updatePageSelector(currentPdf.numPages);
+                    
+                    // Extract text from all pages
+                    for (let pageNum = 1; pageNum <= currentPdf.numPages; pageNum++) {
+                        const page = await currentPdf.getPage(pageNum);
+                        const textContent = await page.getTextContent();
+
+                        // Group text items into paragraphs
+                        const paragraphs = groupTextIntoParagraphs(textContent.items);
+                        
+                        // Store the extracted content by page
+                        extractedPages.push({
+                            pageNumber: pageNum,
+                            content: paragraphs.map(paragraph => `<p>${paragraph}</p>`).join('')
+                        });
+                    }
+
+                    // Show all pages initially
+                    updateDisplayedContent();
+                };
+
+                fileReader.readAsArrayBuffer(file);
+            } catch (error) {
+                console.error('Error processing the PDF:', error);
+                alert('Failed to process the PDF. Please check the file and try again.');
+            }
+        });
+
+        // Update the page selector dropdown
+        function updatePageSelector(totalPages) {
+            // Clear previous options except "All Pages"
+            while (pageSelector.options.length > 1) {
+                pageSelector.remove(1);
+            }
+
+            // Add options for each page
+            for (let i = 1; i <= totalPages; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.text = `Page ${i}`;
+                pageSelector.add(option);
+            }
+
+            // Enable the selector and set default to page 1
+            pageSelector.disabled = false;
+            pageSelector.value = "1"; // Default to first page instead of "all"
+            
+            // Update page info
+            pageInfo.textContent = `Total: ${totalPages} page${totalPages > 1 ? 's' : ''}`;
+            
+            // Update the displayed content to show page 1 by default
+            updateDisplayedContent();
+        }
+
+        // Reset page selector to initial state
+        function resetPageSelector() {
+            while (pageSelector.options.length > 1) {
+                pageSelector.remove(1);
+            }
+            pageSelector.value = 'all';
+            pageSelector.disabled = true;
+            pageInfo.textContent = '';
+        }
+
+        // Update the displayed content based on page selection
+        function updateDisplayedContent() {
+            if (extractedPages.length === 0) return;
+
+            const selectedValue = pageSelector.value;
+            let originalText = '';
+            let formattedText = '';
+
+            if (selectedValue === 'all') {
+                // Show all pages
+                extractedPages.forEach(page => {
+                    originalText += page.content;
+                    formattedText += page.content;
+                });
+            } else {
+                // Show selected page
+                const pageIndex = parseInt(selectedValue) - 1;
+                if (extractedPages[pageIndex]) {
+                    originalText = extractedPages[pageIndex].content;
+                    formattedText = extractedPages[pageIndex].content;
+                }
+            }
+
+            // Display the text in both sections
+            originalContent.innerHTML = originalText;
+            displayContent.innerHTML = formattedText;
+        }
+
+        // Group text items into paragraphs
+        function groupTextIntoParagraphs(textItems) {
+            const paragraphs = [];
+            let currentParagraph = '';
+            let prevY = null;
+
+            for (const item of textItems) {
+                const y = item.transform[5]; // y-coordinate of the text item
+
+                // If the y-coordinate changes significantly, start a new paragraph
+                if (prevY !== null && Math.abs(y - prevY) > 10) {
+                    paragraphs.push(currentParagraph.trim());
+                    currentParagraph = '';
+                }
+
+                // Add the text to the current paragraph
+                currentParagraph += item.str + ' ';
+                prevY = y;
+            }
+
+            // Add the last paragraph
+            if (currentParagraph.trim()) {
+                paragraphs.push(currentParagraph.trim());
+            }
+
+            return paragraphs;
+        }
+    </script>
+</body>
+</html>
