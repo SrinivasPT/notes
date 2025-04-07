@@ -71,6 +71,13 @@ git config user.name "Your Account 1 Name"
 git config user.email "account1@example.com"
 git clone git@srini:srinivaspt/underwriter.git
 
+
+-----------------
+git config user.name "Srinivas Peeta"
+git config user.email "srinivaspt@outlook.com"
+git clone git@srini:srinivaspt/horizon-scanning.git
+------------------
+
 For Account 2
 git config user.name "Your Account 2 Name"
 git config user.email "account2@example.com"
