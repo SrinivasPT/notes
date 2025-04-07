@@ -1,0 +1,35 @@
+==========================================================================================
+=========================================2025-03-28=======================================
+==========================================================================================
+
+This is for one of the Top 4 US Banks. They offer products & Services
+	1. Consumer Products & Services: (Encompassing checking, savings, credit cards, mortgages, personal loans)
+	2. Business & Commercial Banking: (Covering small business, commercial, and merchant services)
+	3. Investment Banking & Capital Markets: (Including M&A, IPOs, debt financing)
+	4. Wealth & Asset Management: (Encompassing investment products, wealth advisory, private banking)
+	5. Corporate News & Financials: (Including earnings, dividends, executive changes, regulatory matters)
+	6. Technology & Innovation: (Covering digital banking updates, fintech partnerships)
+	7. Community & Social Responsibility: (Including philanthropy, community development)
+
+Review the press releases and classify it as relevant to a bank's compliance program if it directly addresses:
+	1. Finalized/approved regulations, guidelines, or standards (e.g., Basel III implementation deadlines, binding ISO 20022 mandates).
+	2. Enforcement actions (fines, court orders).
+	3. New financial compliance metrics (e.g., revised capital ratio thresholds, mandatory stress tests).
+	4. Policy decisions requiring compliance adjustments (e.g., FOMC rate changes affecting liquidity rules).
+	5. Operational changes directly affecting compliance processes (e.g., mergers requiring policy integration).
+	6. Exclude: Routine data reports, work-in-progress updates, non-binding publications, administrative changes, or innovation competitions.
+	
+
+**classify the following news items**
+
+Agency	Date	News
+BIS	26-03-2025	Basel III risk-based capital ratios increase while leverage ratio and Net Stable Funding Ratio remain stable for large internationally active banks in the first half of 2024, latest Basel III monitoring exercise shows
+BIS	13-03-2025	Basel Committee progresses work to strengthen supervisory effectiveness, initiates analytical work on information and communication technology risk management and synthetic risk transfers
+BIS	04-02-2025	Governors and Heads of Supervision endorse work programme of Basel Committee
+BIS	15-01-2025	Global standard-setting bodies publish three final reports on margin in centrally and non-centrally cleared markets
+
+
+**Output format:**
+Strictly in tabular format with two additional columns
+	1. Relevant -> Yes / No (classifying whether it is relevant or not - YES / NO / May Be)
+	2. Comments (Classification Reason)
