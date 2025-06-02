@@ -51,4 +51,17 @@ VALUES ('123e4567-e89b-12d3-a456-426614174000', 'listing', 'listing_type', 'enti
 -- User preferences (many-to-many)
 INSERT INTO entity_types (entity_id, entity_kind, type_category, type_code)
 VALUES ('987e6543-e89b-12d3-a456-426614174000', 'user_preference', 'amenity', 'wifi');
+
+
+CREATE OR REPLACE MATERIALIZED VIEW listing_amenities_clean AS
+SELECT 
+    et.entity_id AS listing_id,
+    jsonb_agg(to_jsonb(t) - 'created_at' - 'updated_at' - 'is_active') AS amenities
+FROM types t
+JOIN entity_types et ON t.type_category = et.type_category 
+                     AND t.type_code = et.type_code
+WHERE et.entity_kind = 'listing'
+AND t.type_category = 'amenity'
+GROUP BY et.entity_id;
+
 =====================================
