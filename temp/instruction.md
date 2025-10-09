@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-Banks like BOA manage massive knowledge repositories policy documents, compliance manuals, product FAQs, operational procedures, risk guidelines, and regulatory updates. Employees across departments (customer service, compliance, operations, IT) often struggle to find precise, compliant answers quickly, especially under strict regulatory constraints.
+Large Banks manage massive knowledge repositories policy documents, compliance manuals, product FAQs, operational procedures, risk guidelines, and regulatory updates. Employees across departments (customer service, compliance, operations, IT) often struggle to find precise, compliant answers quickly, especially under strict regulatory constraints.
 
 Traditional search systems fail because:
 
@@ -307,3 +307,4 @@ A focused retrieval pipeline that is **readable, reproducible, and justified**. 
 **Important:** Include a cost analysis in your submission showing estimated API costs for processing the full dataset and handling typical query loads.
 
 **Good luck — and remember: understanding why your system works (or fails) is more valuable than any single metric!**
+
