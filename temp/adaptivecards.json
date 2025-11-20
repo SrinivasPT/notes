@@ -1,0 +1,732 @@
+{
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "type": "AdaptiveCard",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "📌 Action Items",
+      "weight": "Bolder",
+      "size": "Large",
+      "spacing": "Medium"
+    },
+    {
+      "type": "TextBlock",
+      "text": "Select an application to view action items:",
+      "size": "Small",
+      "isSubtle": true,
+      "spacing": "Small"
+    },
+    {
+      "type": "ColumnSet",
+      "spacing": "Medium",
+      "columns": [
+        {
+          "type": "Column",
+          "width": "stretch",
+          "selectAction": {
+            "type": "Action.ToggleVisibility",
+            "title": "App 1",
+            "targetElements": [
+              "app1_items",
+              "app1_selected",
+              "app2_items",
+              "app2_selected",
+              "app3_items",
+              "app3_selected",
+              "app1_default",
+              "app2_default",
+              "app3_default"
+            ]
+          },
+          "items": [
+            {
+              "type": "Container",
+              "id": "app1_default",
+              "style": "emphasis",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": "📱 App 1",
+                  "weight": "Bolder",
+                  "size": "Medium",
+                  "horizontalAlignment": "Center"
+                },
+                {
+                  "type": "TextBlock",
+                  "text": "2 items",
+                  "size": "Small",
+                  "isSubtle": true,
+                  "horizontalAlignment": "Center"
+                }
+              ]
+            },
+            {
+              "type": "Container",
+              "id": "app1_selected",
+              "isVisible": false,
+              "style": "accent",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": "📱 App 1",
+                  "weight": "Bolder",
+                  "size": "Medium",
+                  "horizontalAlignment": "Center",
+                  "color": "Light"
+                },
+                {
+                  "type": "TextBlock",
+                  "text": "2 items",
+                  "size": "Small",
+                  "horizontalAlignment": "Center",
+                  "color": "Light"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Column",
+          "width": "stretch",
+          "selectAction": {
+            "type": "Action.ToggleVisibility",
+            "title": "App 2",
+            "targetElements": [
+              "app2_items",
+              "app2_selected",
+              "app1_items",
+              "app1_selected",
+              "app3_items",
+              "app3_selected",
+              "app1_default",
+              "app2_default",
+              "app3_default"
+            ]
+          },
+          "items": [
+            {
+              "type": "Container",
+              "id": "app2_default",
+              "style": "emphasis",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": "📱 App 2",
+                  "weight": "Bolder",
+                  "size": "Medium",
+                  "horizontalAlignment": "Center"
+                },
+                {
+                  "type": "TextBlock",
+                  "text": "2 items",
+                  "size": "Small",
+                  "isSubtle": true,
+                  "horizontalAlignment": "Center"
+                }
+              ]
+            },
+            {
+              "type": "Container",
+              "id": "app2_selected",
+              "isVisible": false,
+              "style": "accent",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": "📱 App 2",
+                  "weight": "Bolder",
+                  "size": "Medium",
+                  "horizontalAlignment": "Center",
+                  "color": "Light"
+                },
+                {
+                  "type": "TextBlock",
+                  "text": "2 items",
+                  "size": "Small",
+                  "horizontalAlignment": "Center",
+                  "color": "Light"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Column",
+          "width": "stretch",
+          "selectAction": {
+            "type": "Action.ToggleVisibility",
+            "title": "App 3",
+            "targetElements": [
+              "app3_items",
+              "app3_selected",
+              "app1_items",
+              "app1_selected",
+              "app2_items",
+              "app2_selected",
+              "app1_default",
+              "app2_default",
+              "app3_default"
+            ]
+          },
+          "items": [
+            {
+              "type": "Container",
+              "id": "app3_default",
+              "style": "emphasis",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": "📱 App 3",
+                  "weight": "Bolder",
+                  "size": "Medium",
+                  "horizontalAlignment": "Center"
+                },
+                {
+                  "type": "TextBlock",
+                  "text": "2 items",
+                  "size": "Small",
+                  "isSubtle": true,
+                  "horizontalAlignment": "Center"
+                }
+              ]
+            },
+            {
+              "type": "Container",
+              "id": "app3_selected",
+              "isVisible": false,
+              "style": "accent",
+              "items": [
+                {
+                  "type": "TextBlock",
+                  "text": "📱 App 3",
+                  "weight": "Bolder",
+                  "size": "Medium",
+                  "horizontalAlignment": "Center",
+                  "color": "Light"
+                },
+                {
+                  "type": "TextBlock",
+                  "text": "2 items",
+                  "size": "Small",
+                  "horizontalAlignment": "Center",
+                  "color": "Light"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Container",
+      "id": "app1_items",
+      "isVisible": false,
+      "spacing": "Medium",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "App 1 - Action Items",
+          "weight": "Bolder",
+          "size": "Medium",
+          "color": "Accent"
+        },
+        {
+          "type": "Container",
+          "style": "emphasis",
+          "spacing": "Small",
+          "separator": true,
+          "bleed": true,
+          "items": [
+            {
+              "type": "ColumnSet",
+              "columns": [
+                {
+                  "type": "Column",
+                  "width": "stretch",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "📋 Complete project report",
+                      "weight": "Bolder",
+                      "size": "Medium",
+                      "wrap": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "ColumnSet",
+              "spacing": "Medium",
+              "columns": [
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "⚠️ High",
+                      "size": "Small",
+                      "color": "Default",
+                      "weight": "Bolder",
+                      "isSubtle": true
+                    }
+                  ]
+                },
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "spacing": "Medium",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "📅 Oct 15, 2023",
+                      "size": "Small",
+                      "color": "Default",
+                      "isSubtle": true
+                    }
+                  ]
+                },
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "spacing": "Medium",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "👁️ [View](https://example.com/view/1) • ✅ [Approve](https://example.com/approve/1)",
+                      "size": "Small",
+                      "color": "Default",
+                      "weight": "Bolder",
+                      "isSubtle": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Container",
+          "style": "emphasis",
+          "spacing": "Medium",
+          "separator": true,
+          "bleed": true,
+          "items": [
+            {
+              "type": "ColumnSet",
+              "columns": [
+                {
+                  "type": "Column",
+                  "width": "stretch",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "📊 Update dashboard metrics",
+                      "weight": "Bolder",
+                      "size": "Medium",
+                      "wrap": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "ColumnSet",
+              "spacing": "Medium",
+              "columns": [
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "🔔 Medium",
+                      "size": "Small",
+                      "color": "Default",
+                      "weight": "Bolder",
+                      "isSubtle": true
+                    }
+                  ]
+                },
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "spacing": "Medium",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "📅 Oct 18, 2023",
+                      "size": "Small",
+                      "color": "Default",
+                      "isSubtle": true
+                    }
+                  ]
+                },
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "spacing": "Medium",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "👁️ [View](https://example.com/view/4) • ✅ [Approve](https://example.com/approve/4)",
+                      "size": "Small",
+                      "color": "Default",
+                      "weight": "Bolder",
+                      "isSubtle": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Container",
+      "id": "app2_items",
+      "isVisible": false,
+      "spacing": "Medium",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "App 2 - Action Items",
+          "weight": "Bolder",
+          "size": "Medium",
+          "color": "Accent"
+        },
+        {
+          "type": "Container",
+          "style": "emphasis",
+          "spacing": "Small",
+          "separator": true,
+          "bleed": true,
+          "items": [
+            {
+              "type": "ColumnSet",
+              "columns": [
+                {
+                  "type": "Column",
+                  "width": "stretch",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "📝 Review budget proposal",
+                      "weight": "Bolder",
+                      "size": "Medium",
+                      "wrap": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "ColumnSet",
+              "spacing": "Medium",
+              "columns": [
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "🔔 Medium",
+                      "size": "Small",
+                      "color": "Default",
+                      "weight": "Bolder",
+                      "isSubtle": true
+                    }
+                  ]
+                },
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "spacing": "Medium",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "📅 Oct 20, 2023",
+                      "size": "Small",
+                      "color": "Default",
+                      "isSubtle": true
+                    }
+                  ]
+                },
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "spacing": "Medium",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "👁️ [View](https://example.com/view/2) • ✅ [Approve](https://example.com/approve/2)",
+                      "size": "Small",
+                      "color": "Default",
+                      "weight": "Bolder",
+                      "isSubtle": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Container",
+          "style": "emphasis",
+          "spacing": "Medium",
+          "separator": true,
+          "bleed": true,
+          "items": [
+            {
+              "type": "ColumnSet",
+              "columns": [
+                {
+                  "type": "Column",
+                  "width": "stretch",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "💰 Approve expense claims",
+                      "weight": "Bolder",
+                      "size": "Medium",
+                      "wrap": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "ColumnSet",
+              "spacing": "Medium",
+              "columns": [
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "⚠️ High",
+                      "size": "Small",
+                      "color": "Default",
+                      "weight": "Bolder",
+                      "isSubtle": true
+                    }
+                  ]
+                },
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "spacing": "Medium",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "📅 Oct 22, 2023",
+                      "size": "Small",
+                      "color": "Default",
+                      "isSubtle": true
+                    }
+                  ]
+                },
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "spacing": "Medium",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "👁️ [View](https://example.com/view/5) • ✅ [Approve](https://example.com/approve/5)",
+                      "size": "Small",
+                      "color": "Default",
+                      "weight": "Bolder",
+                      "isSubtle": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Container",
+      "id": "app3_items",
+      "isVisible": false,
+      "spacing": "Medium",
+      "items": [
+        {
+          "type": "TextBlock",
+          "text": "App 3 - Action Items",
+          "weight": "Bolder",
+          "size": "Medium",
+          "color": "Accent"
+        },
+        {
+          "type": "Container",
+          "style": "emphasis",
+          "spacing": "Small",
+          "separator": true,
+          "bleed": true,
+          "items": [
+            {
+              "type": "ColumnSet",
+              "columns": [
+                {
+                  "type": "Column",
+                  "width": "stretch",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "🔍 Conduct security audit",
+                      "weight": "Bolder",
+                      "size": "Medium",
+                      "wrap": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "ColumnSet",
+              "spacing": "Medium",
+              "columns": [
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "ℹ️ Low",
+                      "size": "Small",
+                      "color": "Default",
+                      "weight": "Bolder",
+                      "isSubtle": true
+                    }
+                  ]
+                },
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "spacing": "Medium",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "📅 Oct 25, 2023",
+                      "size": "Small",
+                      "color": "Default",
+                      "isSubtle": true
+                    }
+                  ]
+                },
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "spacing": "Medium",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "👁️ [View](https://example.com/view/3) • ✅ [Approve](https://example.com/approve/3)",
+                      "size": "Small",
+                      "color": "Default",
+                      "weight": "Bolder",
+                      "isSubtle": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Container",
+          "style": "emphasis",
+          "spacing": "Medium",
+          "separator": true,
+          "bleed": true,
+          "items": [
+            {
+              "type": "ColumnSet",
+              "columns": [
+                {
+                  "type": "Column",
+                  "width": "stretch",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "🔐 Update access permissions",
+                      "weight": "Bolder",
+                      "size": "Medium",
+                      "wrap": true
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "ColumnSet",
+              "spacing": "Medium",
+              "columns": [
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "🔔 Medium",
+                      "size": "Small",
+                      "color": "Default",
+                      "weight": "Bolder",
+                      "isSubtle": true
+                    }
+                  ]
+                },
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "spacing": "Medium",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "📅 Oct 28, 2023",
+                      "size": "Small",
+                      "color": "Default",
+                      "isSubtle": true
+                    }
+                  ]
+                },
+                {
+                  "type": "Column",
+                  "width": "auto",
+                  "spacing": "Medium",
+                  "items": [
+                    {
+                      "type": "TextBlock",
+                      "text": "👁️ [View](https://example.com/view/6) • ✅ [Approve](https://example.com/approve/6)",
+                      "size": "Small",
+                      "color": "Default",
+                      "weight": "Bolder",
+                      "isSubtle": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "type": "Action.Submit",
+      "title": "💾 Save Changes",
+      "data": {
+        "action": "save"
+      }
+    }
+  ]
+}
