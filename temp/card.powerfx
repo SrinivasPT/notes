@@ -1,0 +1,218 @@
+AdaptiveCard(
+    {
+        type: "AdaptiveCard",
+        version: "1.5",
+        '$schema': "https://adaptivecards.io/schemas/adaptive-card.json",
+        speak: "Action Items Dashboard with " & metadata.visibleActionCount & " pending actions",
+        body: [
+            {
+                type: "TextBlock",
+                text: dashboard.title,
+                size: "ExtraLarge",
+                weight: "Bolder",
+                wrap: true,
+                color: "Accent"
+            },
+            {
+                type: "TextBlock",
+                text: dashboard.subtitle,
+                size: "Small",
+                wrap: true,
+                spacing: "None"
+            },
+            {
+                type: "Container",
+                spacing: "Medium",
+                separator: true,
+                style: "accent",
+                items: [
+                    {
+                        type: "ColumnSet",
+                        spacing: "Small",
+                        columns: ForAll(
+                            applications,
+                            {
+                                type: "Column",
+                                width: "stretch",
+                                spacing: "Small",
+                                selectAction: {
+                                    type: "Action.Submit",
+                                    title: "Filter " & displayName,
+                                    data: {
+                                        action: "filterApplication",
+                                        applicationId: id
+                                    }
+                                },
+                                items: [
+                                    {
+                                        type: "Container",
+                                        style: If(isActive, "emphasis", "default"),
+                                        separator: isActive,
+                                        items: [
+                                            {
+                                                type: "TextBlock",
+                                                text: emoji,
+                                                size: "ExtraLarge",
+                                                horizontalAlignment: "Center",
+                                                spacing: "Small"
+                                            },
+                                            {
+                                                type: "TextBlock",
+                                                text: Text(pendingCount),
+                                                size: "Large",
+                                                weight: "Bolder",
+                                                horizontalAlignment: "Center",
+                                                spacing: "None",
+                                                color: If(isActive, "Accent", "Default")
+                                            },
+                                            {
+                                                type: "TextBlock",
+                                                text: displayName,
+                                                size: "Small",
+                                                horizontalAlignment: "Center",
+                                                spacing: "None",
+                                                weight: If(isActive, "Bolder", "Default"),
+                                                color: If(isActive, "Accent", "Default"),
+                                                wrap: true
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        )
+                    }
+                ]
+            },
+            {
+                type: "TextBlock",
+                text: "Pending Actions (" & metadata.visibleActionCount & ")" & If(Not(IsBlank(metadata.activeApplicationName)), " - " & metadata.activeApplicationName, ""),
+                size: "Medium",
+                weight: "Bolder",
+                wrap: true,
+                spacing: "Medium",
+                separator: true
+            }
+        ] & ForAll(
+            visibleActionItems,
+            {
+                type: "Container",
+                separator: true,
+                style: "emphasis",
+                spacing: "Small",
+                items: [
+                    {
+                        type: "TextBlock",
+                        text: title,
+                        size: "Medium",
+                        weight: "Bolder",
+                        wrap: true,
+                        maxLines: 2,
+                        spacing: "None"
+                    },
+                    {
+                        type: "ColumnSet",
+                        spacing: "Small",
+                        columns: [
+                            {
+                                type: "Column",
+                                width: "auto",
+                                items: [
+                                    {
+                                        type: "TextBlock",
+                                        text: "Due: 📅 " & dueDate,
+                                        size: "Small",
+                                        wrap: true
+                                    }
+                                ],
+                                verticalContentAlignment: "Center"
+                            },
+                            {
+                                type: "Column",
+                                width: "auto",
+                                items: [
+                                    {
+                                        type: "TextBlock",
+                                        text: "Priority: " & priorityEmoji & " " & priority,
+                                        size: "Small",
+                                        wrap: true
+                                    }
+                                ],
+                                verticalContentAlignment: "Center"
+                            },
+                            {
+                                type: "Column",
+                                width: "stretch",
+                                items: [
+                                    {
+                                        type: "ColumnSet",
+                                        horizontalAlignment: "Right",
+                                        columns: [
+                                            {
+                                                type: "Column",
+                                                width: "auto",
+                                                spacing: "Medium",
+                                                items: [
+                                                    {
+                                                        type: "TextBlock",
+                                                        text: "👁️ View",
+                                                        size: "Small",
+                                                        color: "Accent",
+                                                        selectAction: {
+                                                            type: "Action.OpenUrl",
+                                                            url: detailsUrl
+                                                        }
+                                                    }
+                                                ],
+                                                verticalContentAlignment: "Center"
+                                            },
+                                            {
+                                                type: "Column",
+                                                width: "auto",
+                                                spacing: "Small",
+                                                items: [
+                                                    {
+                                                        type: "TextBlock",
+                                                        text: "✓ Approve",
+                                                        size: "Small",
+                                                        color: "Good",
+                                                        selectAction: {
+                                                            type: "Action.Submit",
+                                                            data: {
+                                                                action: "approve",
+                                                                itemId: id,
+                                                                timestamp: metadata.lastUpdated
+                                                            }
+                                                        }
+                                                    }
+                                                ],
+                                                verticalContentAlignment: "Center"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                verticalContentAlignment: "Center"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ),
+        actions: [
+            {
+                type: "Action.Submit",
+                title: "Show All Applications",
+                data: {
+                    action: "filterApplication",
+                    applicationId: "all"
+                }
+            },
+            {
+                type: "Action.Submit",
+                title: "🔄 Refresh Dashboard",
+                data: {
+                    action: "refresh"
+                }
+            }
+        ]
+    }
+)
